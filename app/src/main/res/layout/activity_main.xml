@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:orientation="horizontal">
+    android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -26,11 +26,19 @@
             />
 
     </com.google.android.material.appbar.AppBarLayout>
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+
+        />
     <TextView
         android:id="@+id/tvLarge"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="60sp"
-        android:text="404!"
+        android:text="@string/text1"
         android:textSize="40sp"
         android:textStyle="bold"
         android:gravity="center"
@@ -38,11 +46,12 @@
         android:background="#00cccccc"
         />
 
+
     <TextView
         android:id="@+id/tvSmall"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="70sp"
-        android:text="having a spot of \nserver troubles?"
+        android:text="@string/text2"
         android:textSize="25sp"
         android:textStyle="bold"
         android:gravity="center"

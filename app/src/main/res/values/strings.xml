@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">proj3_475</string>
+    <string name="text1">404!</string>
+    <string name="text2">having a spot of \nserver troubles?</string>
 </resources>
