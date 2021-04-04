@@ -5,11 +5,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 public class ConnectionCheck {
 
-
-
-    /**
-     * @author lynn
-     */
         Context context;
 
         ConnectionCheck(Context context) {
@@ -24,11 +19,6 @@ public class ConnectionCheck {
             }
             return (current.getState() == NetworkInfo.State.CONNECTED);
         }
-
-        /***
-         *
-         * @return
-         */
         public boolean isWifiReachable() {
             ConnectivityManager mManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo current = mManager.getActiveNetworkInfo();

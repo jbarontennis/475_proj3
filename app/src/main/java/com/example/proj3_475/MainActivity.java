@@ -5,6 +5,8 @@ import androidx.preference.PreferenceManager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -24,11 +26,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
     ImageView image;
     List<Pet> petList  = new ArrayList<>();
     Spinner spinner;
-    ArrayAdapter<String> adapter;
     String prefurl = "pets.json";
     String url = "https://www.pcs.cnu.edu/~kperkins/pets/";
     public static final int MAX_LINES = 15;
@@ -64,13 +68,13 @@ public class MainActivity extends AppCompatActivity {
         tvLarge = findViewById(R.id.tvLarge);
         tvSmall = findViewById(R.id.tvSmall);
         image = findViewById(R.id.imageView1);
-        spinner = (Spinner)findViewById(R.id.spinner);
+
 
         myPreference = PreferenceManager.getDefaultSharedPreferences(this);
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
                 if (key.equals("listPref")) {
-                    loadImage();
+                    loadImage("p0.png");
                 }
             }
         };
@@ -91,7 +95,9 @@ public class MainActivity extends AppCompatActivity {
             myTask.execute(url);
         }
         else
-            Toast.makeText(this,"Uh Ohh cannot reach network",Toast.LENGTH_SHORT).show();
+            tvLarge.setText("0!");
+            tvSmall.setText("for " + url);
+            //image.setImageResource(R.drawable.error_icon_32);
     }
 
     public void setUpSpinner(){
@@ -99,8 +105,9 @@ public class MainActivity extends AppCompatActivity {
         for(int i = 0;i<petList.size();i++){
             listNames[i] = petList.get(i).name;
         }
-        spinner.setVisibility(View.VISIBLE);
-        adapter = new ArrayAdapter<String>(this, R.layout.spinnerlayout,listNames );
+        //spinner.setVisibility(View.VISIBLE);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,listNames );
+        spinner = (Spinner)findViewById(R.id.spin);
         spinner.setAdapter(adapter);
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -108,8 +115,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if(parent.getChildAt(SELECTED_ITEM) != null){
-                    // ((TextView) parent.getChildAt(SELECTED_ITEM).setTextColor(Color.WHITE);
+                     //((TextView) parent.getChildAt(SELECTED_ITEM).setTextColor(Color.WHITE));
                     Toast.makeText(MainActivity.this, (String) parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
+                    loadImage(petList.get(position).file);
                 }
             }
 
@@ -119,8 +127,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    private void loadImage() {
+    private void loadImage(String pic) {
+        String extendedUrl = url + pic;
+        DownloadImage dImage = new DownloadImage();
+        try {
+            Bitmap bit = dImage.execute(extendedUrl).get();
+            image.setImageBitmap(bit);
+        }catch(Exception e){
 
+        }
     }
     public void processJSON(String string) {
         try {
@@ -140,9 +155,7 @@ public class MainActivity extends AppCompatActivity {
             numberentries = jarray.length();
 
             currententry = 0;
-            //setJSONUI(currententry); // parse out object currententry
 
-            //Log.i(TAG, "Number of entries " + numberentries);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -163,33 +176,14 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
-            // site we want to connect to
             myURL = params[0];
-
             try {
                 URL url = new URL( myURL + prefurl);
-
-                // this does no network IO
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-                // can further configure connection before getting data
-                // cannot do this after connected
-               /* connection.setRequestMethod("GET");
-                connection.setReadTimeout(TIMEOUT);
-                connection.setConnectTimeout(TIMEOUT);
-                connection.setRequestProperty("Accept-Charset", "UTF-8");*/
-
-                // wrap in finally so that stream bis is sure to close
-                // and we disconnect the HttpURLConnection
                 BufferedReader in = null;
                 try {
-
-                    // this opens a connection, then sends GET & headers
                     connection.connect();
 
-                    // lets see what we got make sure its one of
-                    // the 200 codes (there can be 100 of them
-                    // http_status / 100 != 2 does integer div any 200 code will = 2
                     statusCode = connection.getResponseCode();
                     if (statusCode / 100 != 2) {
                         Log.e(TAG, "Error-connection.getResponseCode returned "
@@ -198,8 +192,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     in = new BufferedReader(new InputStreamReader(connection.getInputStream()), 8096);
-
-                    // the following buffer will grow as needed
                     String myData;
                     StringBuffer sb = new StringBuffer();
 
@@ -209,7 +201,6 @@ public class MainActivity extends AppCompatActivity {
                     return sb.toString();
 
                 } finally {
-                    // close resource no matter what exception occurs
                     if(in != null) {
                         in.close();
                     }
@@ -219,30 +210,47 @@ public class MainActivity extends AppCompatActivity {
                 return null;
             }
         }
-
-        /**
-         *
-         * @param result null if failure or text of the html page
-         *               override this method in subclass to customize it to calling app
-         */
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             processJSON(result);
             setUpSpinner();
+            loadImage("p0.png");
         }
 
-        /**
-         * not implemented above, once you start the download you are in it for the long haul
-         * Not a good idea, what if its a giant file?
-         * override this method in subclass to customize it to calling app
-         */
         @Override
         protected void onCancelled() {
             //override to handle this
             super.onCancelled();
         }
     };
+private class DownloadImage extends AsyncTask<String, Void, Bitmap>{
+
+
+    @Override
+    protected Bitmap doInBackground(String... strings) {
+        Bitmap bitmap = null;
+        URL url;
+        HttpURLConnection connect;
+        InputStream in;
+        try{
+            url = new URL(strings[0]);
+            connect = (HttpURLConnection) url.openConnection();
+            in = connect.getInputStream();
+            bitmap = BitmapFactory.decodeStream(in);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bitmap;
+    }
+    @Override
+    protected void onPostExecute(Bitmap result){
+        super.onPostExecute(result);
+        tvLarge.setVisibility(View.INVISIBLE);
+        tvSmall.setVisibility(View.INVISIBLE);
+        image.setImageBitmap(result);
+    }
+}
 
 
 
