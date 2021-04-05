@@ -80,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
                     url = myPreference.getString(key, getString(R.string.URLpet));
                     spinner.setVisibility(View.VISIBLE);
                     if(myCheck.isNetworkReachable()) {
-
-                        loadImage("p0.png");
+                    setUpSpinner();
+                        //loadImage();
                     }else{
 
                         tvLarge.setText(getString(R.string.unreachable));
