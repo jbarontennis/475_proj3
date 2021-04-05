@@ -2,4 +2,6 @@
     <string name="app_name">proj3_475</string>
     <string name="text1">0!</string>
     <string name="text2">for </string>
+    <string name="URLpet">https://www.pcs.cnu.edu/~kperkins/pets/</string>
+    <string name="unreachable">Issues! Network is unreachable</string>
 </resources>

@@ -7,19 +7,14 @@
     tools:context=".MainActivity"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
 
-        android:background="#77000000"
-        android:fitsSystemWindows="true"
-        >
 
         <!--  changed from this android:background="?attr/colorPrimary" to whats below to make transparent-->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            >
 
 
 
@@ -30,7 +25,7 @@
                 android:paddingRight="10dp"/>
         </androidx.appcompat.widget.Toolbar>
 
-    </com.google.android.material.appbar.AppBarLayout>
+
 <FrameLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent">

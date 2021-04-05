@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +15,9 @@ import android.net.sip.SipSession;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -21,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -46,8 +51,6 @@ public class MainActivity extends AppCompatActivity {
     Spinner spinner;
     String prefurl = "pets.json";
     String url = "https://www.pcs.cnu.edu/~kperkins/pets/";
-    public static final int MAX_LINES = 15;
-    private static final int SPACES_TO_INDENT_FOR_EACH_LEVEL_OF_NESTING = 2;
     int numberentries = -1;
     int currententry = -1;
     JSONArray jarray;
@@ -64,48 +67,59 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().hide();
         tvLarge = findViewById(R.id.tvLarge);
         tvSmall = findViewById(R.id.tvSmall);
         image = findViewById(R.id.imageView1);
 
+        ConnectionCheck myCheck = new ConnectionCheck(this);
 
         myPreference = PreferenceManager.getDefaultSharedPreferences(this);
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-                if (key.equals("listPref")) {
-                    loadImage("p0.png");
+                if (key.equals("prefURL")) {
+                    url = myPreference.getString(key, getString(R.string.URLpet));
+                    spinner.setVisibility(View.VISIBLE);
+                    if(myCheck.isNetworkReachable()) {
+
+                        loadImage("p0.png");
+                    }else{
+
+                        tvLarge.setText(getString(R.string.unreachable));
+                        image.setImageResource(R.drawable.errorback);
+                        tvLarge.setVisibility(View.VISIBLE);
+                    }
                 }
             }
         };
         myPreference.registerOnSharedPreferenceChangeListener(listener);
-        ConnectionCheck myCheck = new ConnectionCheck(this);
         if (myCheck.isNetworkReachable()) {
-
-
-            //A common async task
             Download myTask = new Download(prefurl);
-
-
-            // //////////////////////////////////////////////////// demo this
-            // telescoping initilization pattern
-            //myTask.setnameValuePair("screen_name", "maddow").setnameValuePair("day", "today");
-            // myTask.execute(MYURL);
-
             myTask.execute(url);
         }
         else
             tvLarge.setText("0!");
-            tvSmall.setText("for " + url);
-            //image.setImageResource(R.drawable.error_icon_32);
+        tvSmall.setText("for " + url);
+        image.setImageResource(R.drawable.errorback);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem menu) {
+        if (menu.getItemId() == R.id.menu) {
+            startActivity(new Intent(this, PreferenceSettings.class));
+        }
+        return super.onOptionsItemSelected(menu);
+    }
     public void setUpSpinner(){
         String []listNames = new String[petList.size()];
         for(int i = 0;i<petList.size();i++){
             listNames[i] = petList.get(i).name;
         }
-        //spinner.setVisibility(View.VISIBLE);
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,listNames );
         spinner = (Spinner)findViewById(R.id.spin);
         spinner.setAdapter(adapter);
@@ -115,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if(parent.getChildAt(SELECTED_ITEM) != null){
-                     //((TextView) parent.getChildAt(SELECTED_ITEM).setTextColor(Color.WHITE));
                     Toast.makeText(MainActivity.this, (String) parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show();
                     loadImage(petList.get(position).file);
                 }
@@ -151,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
                 Pet tmp = new Pet(petName, fileName);
                 petList.add(tmp);
             }
-            // how many entries
             numberentries = jarray.length();
 
             currententry = 0;
@@ -165,7 +177,6 @@ public class MainActivity extends AppCompatActivity {
 
     private class Download extends AsyncTask<String, Void, String> {
         private static final String     TAG = "Download";
-        private static final int        TIMEOUT = 1000;    // 1 second
         private String                  myQuery = "";
         protected int                   statusCode = 0;
         protected String                myURL;
@@ -225,11 +236,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 private class DownloadImage extends AsyncTask<String, Void, Bitmap>{
-
+    Bitmap bitmap = null;
 
     @Override
     protected Bitmap doInBackground(String... strings) {
-        Bitmap bitmap = null;
+
         URL url;
         HttpURLConnection connect;
         InputStream in;
@@ -246,9 +257,18 @@ private class DownloadImage extends AsyncTask<String, Void, Bitmap>{
     @Override
     protected void onPostExecute(Bitmap result){
         super.onPostExecute(result);
-        tvLarge.setVisibility(View.INVISIBLE);
-        tvSmall.setVisibility(View.INVISIBLE);
-        image.setImageBitmap(result);
+        if(bitmap != null) {
+            tvLarge.setVisibility(View.INVISIBLE);
+            tvSmall.setVisibility(View.INVISIBLE);
+            image.setImageBitmap(result);
+        }else{
+            tvLarge.setVisibility(View.VISIBLE);
+            tvSmall.setVisibility(View.VISIBLE);
+            tvLarge.setText("404!");
+            tvSmall.setText(getString(R.string.text2)+ " " + url);
+            spinner.setVisibility(View.INVISIBLE);
+            image.setImageResource(R.drawable.errorback);
+        }
     }
 }
 
